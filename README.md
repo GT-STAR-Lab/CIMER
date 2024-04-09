@@ -27,20 +27,17 @@ source ~/.bashrc
 ```
 **2. Create a conda environment for mjrl and install mjrl**:
 ```
-# Download binary file of mujoco2.1.0
 cd mjrl
 # !!! Delete line 21 (mujoco-py) in mjrl/setup/env.yml, later we will install it manually !!!
-
 conda update conda
 conda env create -f setup/env.yml
 source activate mjrl-env
 pip install -e .
-
 # Now install mujoco-py
 pip install mujoco-py==2.1.2.14
 # We need to check whether mujoco-py is installed successfully. Run python in current conda environment (mjrl-env) and import mujoco_py.
 # If mujoco_py is installed successfully, it should be (compiled and) imported without errors.
-python
+python3
 import mujoco_py
 # If mujoco_py is imported for the first time, it will be compiled automatically.
 # If a Cython related error occurs, try changing the version of gcc and Cython
@@ -110,16 +107,19 @@ To train new CIMER policies:
 ### Hammer task
 ```
 conda activate mjrl-env
+mkdir Training
 python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Hammer --config hand_dapg/dapg/controller_training/dapg-hammer_PPO.txt --eval_data Samples/Hammer/Hammer_task.pickle
 ```
 ### Relocate task
 ```
 conda activate mjrl-env
+mkdir Training
 python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Relocate --config hand_dapg/dapg/controller_training/dapg-relocate_PPO.txt --eval_data Samples/Relocate/Relocate_task.pickle
 ```
 ### Door task
 ```
 conda activate mjrl-env
+mkdir Training
 python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Door --config hand_dapg/dapg/controller_training/dapg-door_PPO.txt --eval_data Samples/Door/Door_task.pickle
 ```
 
