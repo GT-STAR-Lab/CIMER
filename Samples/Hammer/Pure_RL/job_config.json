@@ -1,0 +1,32 @@
+{
+    "env": "hammer-v0",
+    "algorithm": "RL",
+    "fixed_seed": 100,
+    "RL_seed": 100,
+    "num_cpu": 1,
+    "save_freq": 25,
+    "eval_rollouts": 200,
+    "exp_notes": "Example config for training policy using DAPG for the relocate-v0 task.",
+    "pg_algo": "trpo",
+    "demo_traj": 200,
+    "policy_size": [
+        32,
+        32
+    ],
+    "vf_batch_size": 64,
+    "vf_epochs": 2,
+    "vf_learn_rate": 0.001,
+    "rl_gamma": 0.995,
+    "rl_gae": 0.97,
+    "rl_num_traj": 200,
+    "rl_num_iter": 501,
+    "lam_0": 0.01,
+    "lam_1": 0.95,
+    "SOIL_iter": 500,
+    "SOIL_MB_SIZE": 3200,
+    "SOIL_LR": 0.001,
+    "SOIL_WD": 0.0,
+    "SOIL_RBS": 1000000,
+    "SOIL_ADV_W": 0.1,
+    "SOIL_MLP_W": 64
+}

@@ -1,0 +1,65 @@
+{
+
+# general inputs
+
+'env'           :   'pen-v0',
+'algorithm'     :   'PPO',  # NPG, TRPO, PPO
+'fixed_seed'    :   100,    # fixed seed used for policy initialization and evaluation
+'RL_seed'       :   100,    # random seed used during RL training
+'PPO_bs'        :   10000,
+'PPO_epoch'     :   8,  # 10 in PPO paper
+'PPO_clip'      :   0.2,
+'num_cpu'       :   1,   # num_cpu seems to correspond to the num of physical cpus
+'save_freq'     :   25,
+'eval_rollouts' :   0,   #200
+'obj_dynamics'  :   True,  # set it to be true if we use predicted object dynamics. We are targeting a task-agnostic controller, we shouod not used precited object dynamics (always set to be False).
+'control_mode'  :   'PID', # Either 'Torque' or 'PID', since we consider as a motion adaptor, we should stick with PID controller
+'policy_output' :   'jp', # jp->joint position; djp->delta joint position
+'exp_notes'     :   'Training controller for KODex 1.0',
+ 
+# Demonstration data and behavior cloning
+
+'bc'            :   1,  # if using BC to warm-start the motion adapter, set it to be 1
+'bc_traj'       :   50,  # specify the number of traj. If set 0, then use all eval demos
+'bc_batch_size' :   32,
+'bc_epochs'     :   5,
+'bc_learn_rate' :   1e-3,
+'bc_normalize'  :   1,   # Set it to be 1 to normalize the NN output and variance. This will overwrite the 'init_log_std'
+'bc_augment'    :   1,  # Set it to be 1 to use data augmentation method, whose aim is to make the warm-start policy more robust. 
+'bc_hand_noise' :   0.1,  # the sigma of G-noise to add into hand states (unit: radian)
+'bc_obj_noise'  :   1,  # the sigma of G-noise to add into object states (unit: mm/degree)
+'bc_aug_size'   :   4, # augmented data consists of n copies of original noise-free data
+'freeze_base'   :   True, # Set it to be true if we only adapt the finger motions.
+ 
+# RL parameters (all params related to PG)
+'min_log_std'   :   -5,          # minimal exp: exp(-5) = 0.007 -> encourage exploration
+'init_log_std'  :   -2,          # exp(-2) = 0.14
+'policy_size'   :   (256, 128),  # in previous work, they used (512, 256) / (1024, 512) / 128
+'vf_size'       :   (256, 128),
+'vf_batch_size' :   10000,
+'vf_epochs'     :   2,
+'vf_learn_rate' :   1e-3,  # for value function update
+'rl_step_size'  :   2e-6,  # for policy update, 3e-4 in PPO paper
+'rl_desired_kl' :   0.0,  # desired KL divergence used to adjust the step size, set it to be non-zero to enable it
+'rl_gamma'      :   0.98,  # to keep tracking, we should set gamma larger
+'rl_gae'        :   0.97,
+'rl_num_traj'   :   1140,
+'rl_num_iter'   :   1501,
+'adv_scale'     :   0.1,     # advantages = adv_scale * advantages
+'regularizer'   :   'none', 
+'lam_0'         :   1e-2,
+'lam_1'         :   0.95, 
+
+# KODex parameters (all params related to KODex)
+'matrix_file'   :   '/hand_dapg/dapg/controller_training/koopman_without_vel/',
+# 'future_s'    :   (t+1, t+2, t+3),
+#'future_s'     :   3,  # n continuous future states
+'future_s'      :   (1,5,10), # future steps at t+1, t+5, t+10
+'history_s'     :   2,  # n continuous history pairs (a_{t-n-1:t-1}, s_{t-n:t}), if it is set to be 0, we have ({a_{t-1}, s_t), if it is set to be -1, we only have  (s_t)
+'task_ratio'    :   0.0, # task-specific reward ratio
+'tracking_ratio':   1.0, # tracking reward ratio''
+'hand_track'    :   5.0, # coefficient of hand state tracking
+'object_track'  :   5.0, # coefficient of object state tracking
+'ADD_BONUS_REWARDS'  : 1, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
+'ADD_BONUS_PENALTY'  : 0, # adding the bonus hand tracking panelties (1->enabled; 0->disabled)
+}

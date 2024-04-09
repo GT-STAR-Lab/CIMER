@@ -1,0 +1,39 @@
+{
+
+# general inputs
+
+'env'           :   'pen-v0',
+'algorithm'     :   'RL', # 'SOIL' or 'RL'
+'fixed_seed'    :   100,    # fixed seed used for policy initialization and evaluation
+'RL_seed'       :   100,    # random seed used during RL training
+'num_cpu'       :   1,
+'save_freq'     :   25,
+'eval_rollouts' :   200,
+'exp_notes'     :   'Example config for training policy using DAPG for the relocate-v0 task.',
+
+# RL parameters (all params related to PG, value function, DAPG etc.)
+
+'pg_algo'       :   'trpo',   # 'npg' or 'trpo'
+'demo_traj'     :   200,  # specify the number of traj. If set 0, then use all eval demos
+'policy_size'   :   (32, 32),
+'vf_batch_size' :   64,
+'vf_epochs'     :   2,
+'vf_learn_rate' :   1e-3,
+'rl_step_size'  :   2e-6,
+'rl_gamma'      :   0.995,
+'rl_gae'        :   0.97,
+'rl_num_traj'   :   1140,
+'rl_num_iter'   :   1501,
+'lam_0'         :   1e-2,
+'lam_1'         :   0.95,
+
+# SOIL params
+'SOIL_iter'     :   500,
+'SOIL_MB_SIZE'  :   3200,
+'SOIL_LR'       :   1e-3,
+'SOIL_WD'       :   0.0,
+'SOIL_RBS'      :   1000000,
+'SOIL_ADV_W'    :   0.1,
+'SOIL_MLP_W'    :   64,
+
+}
