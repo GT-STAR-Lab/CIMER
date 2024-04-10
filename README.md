@@ -166,4 +166,3 @@ python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config
       archivePrefix={arXiv},
       primaryClass={cs.RO}
 }
-```
