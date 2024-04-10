@@ -157,6 +157,8 @@ python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/SOIL --config h
 conda activate mjrl-env
 python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config hand_dapg/dapg/SOIL/purerl-door.txt --eval_data Samples/Door/Door_task.pickle
 ```
+## Additional notes
+We indeed provide the learned Koopman Matrix for the Motion Generation policy (Under `CIMER/hand_dapg/dapg/controller_training/koopman_without_vel` folder). If you would like to learn the Motion Generation policy yourself, please refer to our previous project ([KODex](https://sites.google.com/view/kodex-corl)) for more details.
 ## Bibtex
 ```
 @misc{han2024CIMER,
