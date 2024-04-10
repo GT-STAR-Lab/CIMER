@@ -2,8 +2,8 @@
 
 # general inputs
 
-'env'           :   'pen-v0',
-'algorithm'     :   'SOIL', # 'SOIL' or 'RL'
+'env'           :   'relocate-v0',
+'algorithm'     :   'RL', # 'SOIL' or 'RL'
 'fixed_seed'    :   100,    # fixed seed used for policy initialization and evaluation
 'RL_seed'       :   100,    # random seed used during RL training
 'num_cpu'       :   1,
@@ -19,11 +19,10 @@
 'vf_batch_size' :   64,
 'vf_epochs'     :   2,
 'vf_learn_rate' :   1e-3,
-'rl_step_size'  :   2e-6,
 'rl_gamma'      :   0.995,
 'rl_gae'        :   0.97,
-'rl_num_traj'   :   1140,
-'rl_num_iter'   :   1501,
+'rl_num_traj'   :   200,
+'rl_num_iter'   :   501,
 'lam_0'         :   1e-2,
 'lam_1'         :   0.95,
 

@@ -102,29 +102,62 @@ conda activate mjrl-env
 MJPL python3 hand_dapg/dapg/SOIL/visualize_policy_on_demos.py --config Samples/Door/Pure_RL/job_config.json --policy Samples/Door/Pure_RL/best_policy.pickle --demos Samples/Door/Door_task.pickle
 ```
 
-## CIMER Training
-To train new CIMER policies:
+## Policy Training
+We also provide codes to train new policies. Under `CIMER` folder, run the follow commands:
+```
+mkdir -p Training/Hammer
+mkdir -p Training/Relocate
+mkdir -p Training/Door
+```
 ### Hammer task
+**CIMER**:
 ```
 conda activate mjrl-env
-mkdir Training
-python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Hammer --config hand_dapg/dapg/controller_training/dapg-hammer_PPO.txt --eval_data Samples/Hammer/Hammer_task.pickle
+python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Hammer/CIMER --config hand_dapg/dapg/controller_training/dapg-hammer_PPO.txt --eval_data Samples/Hammer/Hammer_task.pickle
+```
+**SOIL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Hammer/SOIL --config hand_dapg/dapg/SOIL/soil-hammer.txt --eval_data Samples/Hammer/Hammer_task.pickle
+```
+**Pure RL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Hammer/PureRL --config hand_dapg/dapg/SOIL/purerl-hammer.txt --eval_data Samples/Hammer/Hammer_task.pickle
 ```
 ### Relocate task
+**CIMER**:
 ```
 conda activate mjrl-env
-mkdir Training
-python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Relocate --config hand_dapg/dapg/controller_training/dapg-relocate_PPO.txt --eval_data Samples/Relocate/Relocate_task.pickle
+python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Relocate/CIMER --config hand_dapg/dapg/controller_training/dapg-relocate_PPO.txt --eval_data Samples/Relocate/Relocate_task.pickle
+```
+**SOIL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Relocate/SOIL --config hand_dapg/dapg/SOIL/soil-relocate.txt --eval_data Samples/Relocate/Relocate_task.pickle
+```
+**Pure RL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Relocate/PureRL --config hand_dapg/dapg/SOIL/purerl-relocate.txt --eval_data Samples/Relocate/Relocate_task.pickle
 ```
 ### Door task
+**CIMER**:
 ```
 conda activate mjrl-env
-mkdir Training
-python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Door --config hand_dapg/dapg/controller_training/dapg-door_PPO.txt --eval_data Samples/Door/Door_task.pickle
+python3 hand_dapg/dapg/controller_training/job_script.py --output Training/Door/CIMER --config hand_dapg/dapg/controller_training/dapg-door_PPO.txt --eval_data Samples/Door/Door_task.pickle
 ```
-
+**SOIL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/SOIL --config hand_dapg/dapg/SOIL/soil-door.txt --eval_data Samples/Door/Door_task.pickle
+```
+**Pure RL**:
+```
+conda activate mjrl-env
+python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config hand_dapg/dapg/SOIL/purerl-door.txt --eval_data Samples/Door/Door_task.pickle
+```
 ## Bibtex
-```
 @misc{han2024CIMER,
       title={Learning Prehensile Dexterity by Imitating and Emulating State-only Observations}, 
       author={Yunhai Han and Zhenyang Chen and Harish Ravichandar},

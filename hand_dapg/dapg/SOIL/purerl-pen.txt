@@ -3,7 +3,7 @@
 # general inputs
 
 'env'           :   'pen-v0',
-'algorithm'     :   'SOIL', # 'SOIL' or 'RL'
+'algorithm'     :   'RL', # 'SOIL' or 'RL'
 'fixed_seed'    :   100,    # fixed seed used for policy initialization and evaluation
 'RL_seed'       :   100,    # random seed used during RL training
 'num_cpu'       :   1,

@@ -5,8 +5,8 @@
 'env'           :   'door-v0',
 'algorithm'     :   'PPO',  # NPG, TRPO, PPO
 'fixed_seed'    :   100,    # fixed seed used for policy initialization and evaluation
-'RL_seed'       :   100,    # random seed used during RL training
-'PPO_bs'        :   7600,
+'RL_seed'       :   105,    # random seed used during RL training
+'PPO_bs'        :   760,
 'PPO_epoch'     :   8,  # 10 in PPO paper
 'PPO_clip'      :   0.2,
 'num_cpu'       :   1,   # num_cpu seems to correspond to the num of physical cpus
@@ -30,21 +30,21 @@
 'bc_obj_noise'  :   1,  # the sigma of G-noise to add into object states (unit: mm/degree)
 'bc_aug_size'   :   4, # augmented data consists of n copies of original noise-free data
 'freeze_base'   :   True, # Set it to be true if we only adapt the finger motions.
-'include_Rots'  :   True, # Set it to be true if we also include hand rotation joints.
+'include_Rots'  :   False, # Set it to be true if we also include hand rotation joints.
  
 # RL parameters (all params related to PG)
 'min_log_std'   :   -5,          # minimal exp: exp(-5) = 0.007 -> encourage exploration, change to -5 if policy_output = 'jp'
-'init_log_std'  :   -4,          # change to -2 if policy_output = 'jp'
+'init_log_std'  :   -2,          # change to -2 if policy_output = 'jp'
 'policy_size'   :   (256, 128),  # in previous work, they used (512, 256) / (1024, 512) / 128
 'vf_size'       :   (256, 128),
-'vf_batch_size' :   10000,
+'vf_batch_size' :   64,
 'vf_epochs'     :   2,
 'vf_learn_rate' :   1e-3,  # for value function update
 'rl_step_size'  :   2e-6,  # for policy update, 3e-4 in PPO paper
 'rl_desired_kl' :   0.0,  # desired KL divergence used to adjust the step size, set it to be non-zero to enable it
 'rl_gamma'      :   0.98,  # to keep tracking, we should set gamma larger
 'rl_gae'        :   0.97,
-'rl_num_traj'   :   1140,
+'rl_num_traj'   :   200,
 'rl_num_iter'   :   1501,
 'adv_scale'     :   1.,     # advantages = adv_scale * advantages
 'regularizer'   :   'none', 
@@ -60,7 +60,7 @@
 'task_ratio'    :   0.0, # task-specific reward ratio
 'tracking_ratio':   1.0, # tracking reward ratio''
 'hand_track'    :   5.0, # coefficient of hand state tracking
-'object_track'  :   5.0, # coefficient of object state tracking
-'ADD_BONUS_REWARDS'  : 1, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
+'object_track'  :   0.0, # coefficient of object state tracking
+'ADD_BONUS_REWARDS'  : 0, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
 'ADD_BONUS_PENALTY'  : 0, # adding the bonus hand tracking panelties (1->enabled; 0->disabled)
 }
