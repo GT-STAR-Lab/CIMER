@@ -158,6 +158,7 @@ conda activate mjrl-env
 python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config hand_dapg/dapg/SOIL/purerl-door.txt --eval_data Samples/Door/Door_task.pickle
 ```
 ## Bibtex
+```
 @misc{han2024CIMER,
       title={Learning Prehensile Dexterity by Imitating and Emulating State-only Observations}, 
       author={Yunhai Han and Zhenyang Chen and Harish Ravichandar},
@@ -166,3 +167,4 @@ python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config
       archivePrefix={arXiv},
       primaryClass={cs.RO}
 }
+```
