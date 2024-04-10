@@ -279,7 +279,6 @@ class GymEnv(object):
         save_path = os.path.join(os.getcwd(), 'Videos', task, object_name)[:-1] + '_DAPG.mp4'
         # save_traj = 50  # used for the default object on each task
         save_traj = 20  # used for the new objects on the relocation task
-        Record = True
         for idx in range(len(demos)):
             print("Episode %d" % idx)
             self.reset()
@@ -317,12 +316,6 @@ class GymEnv(object):
                 score = score + r
                 if Visualize:
                     self.render()
-                    if Record == True:
-                        if idx == 0 and t == 0:
-                            self.env.viewer.forcefully_record_video(True, save_path)
-                        elif idx >= save_traj and t == 0:
-                            Record = False
-                            self.env.viewer.forcefully_record_video(False, save_path)    
                 t = t+1
             episodes.append(copy.deepcopy(episode_data))
             total_score += score
@@ -2640,15 +2633,6 @@ class GymEnv(object):
             success_list_sim_noisy = []
             R_z_motion_PD = []
             R_z_motion_MA = []
-            # Read an IDC controller for this task
-            IDC_Controller = False
-            Controller_loc = '/home/yhan389/Desktop/KODex/Results/Drafted/Door/17_10_2022_14_37_42/PID_NN/NN_controller_best.pt'
-            NN_Input_size = 2 * 28
-            NN_Output_size = 28
-            NN_size = [NN_Input_size, 2 * NN_Input_size, 2 * NN_Input_size, NN_Input_size, NN_Output_size]  # define a neural network to learn the PID mapping
-            Controller = FCNetwork(NN_size, nonlinearity='relu')
-            Controller.load_state_dict(torch.load(Controller_loc))
-            Controller.eval() # eval mode
             for ep in tqdm(range(num_episodes)):
                 self.reset()
                 self.set_env_state(Eval_data[ep]['init_states'])
@@ -4060,7 +4044,6 @@ class GymEnv(object):
         # save_traj = 50  # used for the default object on each task
         save_traj = 20  # used for the new objects on the relocation task
         if task == 'relocate':
-            Record = True
             success_list_sim = []
             success_threshold = 10
             for ep in tqdm(range(num_episodes)):
@@ -4132,12 +4115,6 @@ class GymEnv(object):
                     print("Episode %d, KOdex with motion adapter (mean action)." %(ep + 1))
                 while t < task_horizon - 1 and obj_height > -0.05 :  # what would be early-termination for relocation task?
                     self.render() if visual is True else None
-                    if Record == True:
-                        if ep == 0 and t == 0:
-                            self.env.viewer.forcefully_record_video(True, save_path)
-                        elif ep >= save_traj and t == 0:
-                            Record = False
-                            self.env.viewer.forcefully_record_video(False, save_path)    
                     o = self.get_obs()
                     if not policy.freeze_base:
                         current_hand_state = o[:30]
@@ -4294,16 +4271,6 @@ class GymEnv(object):
                     success_list_sim.append(1)
             print("(CIMER) Success rate = %f" % (len(success_list_sim) / num_episodes))
         elif task == 'door':
-            # Read an IDC controller for this task
-            IDC_Controller = False
-            Controller_loc = '/home/yhan389/Desktop/KODex/Results/Drafted/Door/17_10_2022_14_37_42/PID_NN/NN_controller_best.pt'
-            NN_Input_size = 2 * 28
-            NN_Output_size = 28
-            NN_size = [NN_Input_size, 2 * NN_Input_size, 2 * NN_Input_size, NN_Input_size, NN_Output_size]  # define a neural network to learn the PID mapping
-            Controller = FCNetwork(NN_size, nonlinearity='relu')
-            Controller.load_state_dict(torch.load(Controller_loc))
-            Controller.eval() # eval mode
-            Record = True
             success_list_sim = []
             for ep in tqdm(range(num_episodes)):
                 init_hand_state = Eval_data[ep]['handpos']
@@ -4382,12 +4349,6 @@ class GymEnv(object):
                     print("Episode %d, KOdex with motion adapter (mean action)." %(ep + 1))
                 while t < task_horizon - 1:  # what would be early-termination for door task?
                     self.render() if visual is True else None
-                    if Record == True:
-                        if ep == 0 and t == 0:
-                            self.env.viewer.forcefully_record_video(True, save_path)
-                        elif ep >= save_traj and t == 0:
-                            Record = False
-                            self.env.viewer.forcefully_record_video(False, save_path)    
                     o = self.get_obs()
                     if not policy.freeze_base:
                         current_hand_state = self.get_env_state()['qpos'][:num_hand]
@@ -4588,7 +4549,6 @@ class GymEnv(object):
                     success_list_sim.append(1)
             print("(CIMER) Success rate = %f" % (len(success_list_sim) / num_episodes))
         elif task == 'hammer':
-            Record = True
             success_list_sim = []
             for ep in tqdm(range(num_episodes)):
                 init_hand_state = Eval_data[ep]['handpos']
@@ -4646,12 +4606,6 @@ class GymEnv(object):
                     print("Episode %d, CIEMR policy." %(ep + 1))
                 while t < task_horizon - 1:  # what would be early-termination for hammer task?
                     self.render() if visual is True else None  
-                    if Record == True:
-                        if ep == 0 and t == 0:
-                            self.env.viewer.forcefully_record_video(True, save_path)
-                        elif ep >= save_traj and t == 0:
-                            Record = False
-                            self.env.viewer.forcefully_record_video(False, save_path)    
                     o = self.get_obs()
                     if not policy.freeze_base:
                         current_hand_state = self.get_env_state()['qpos'][:num_hand]
