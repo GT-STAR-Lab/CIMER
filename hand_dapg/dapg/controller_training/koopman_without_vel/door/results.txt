@@ -1,0 +1,4 @@
+Training time is: 15.459196 seconds.
+The final test accuracy in lifted space is: 0.005042, and the accuracy in original space is: 0.006488.
+The fake test accuracy in lifted space is: 6852.950309, and the fake accuracy in original space is: 7788.914523.
+The number of demo used for experiment is: 200.
