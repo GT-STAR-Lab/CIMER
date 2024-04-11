@@ -6,43 +6,53 @@ Project webpage: [CIMER](https://sites.google.com/view/cimer-2024/)
 Paper link: [Learning Prehensile Dexterity by Imitating and Emulating State-only Observations](https://arxiv.org/abs/2404.05582)
 
 ## Environment Setup
-**1. Install mujoco2.1.0**:
+### Install mujoco2.0.0
+Adapted from [Ben's tutorial 2.1](https://www.cs.cmu.edu/~cga/controls-intro-22/kantor/How_to_Install_MuJoCo_on_Ubuntu_V1.pdf)
+
+1. Setup the directory
 ```
-# Download binary file of mujoco2.1.0
 cd ~
 mkdir .mujoco
 cd .mujoco
-wget https://github.com/deepmind/mujoco/releases/download/2.1.0/mujoco210-linux-x86_64.tar.gz
-mv mujoco210-linux-x86_64.tar.gz mujoco210
-tar -zxvf mujoco210
+```
+2. Download the MuJoCo version [2.0 binaries](https://www.roboti.us/index.html) and select the mujoco200 Linux option. Or if you are feeling adventurous here’s the direct download link: https://www.roboti.us/download/mujoco200_linux.zip.
+3. Get the license: Go to https://www.roboti.us/license.html
+4. Unzip this file and place it in the directory ∼/.mujoco/mujoco200 and place
+your license key (mjkey.txt) in ∼/.mujoco/mujoco200/bin/mjkey.txt.
+5. Test this installation by navigating to ∼/.mujoco/mujoco200/bin and executing ./simulate ../model/humanoid.xml.
+
 # Add Environment variables to ~/.bashrc
-sudo gedit ~/.bashrc
-# Add the following 4 commands at the end of .bashrc
+Add the following 4 commands at the end of `~.bashrc`
+```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mujoco210/bin
 export MUJOCO_KEY_PATH=~/.mujoco${MUJOCO_KEY_PATH}
 export MUJOCO_PY_FORCE_CPU=True
 alias MJPL='LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so:/usr/lib/nvidia-384/libGL.so'
-# Source ~/.bashrc to commit the changes
+```
+Source ~/.bashrc to commit the changes
+```
 source ~/.bashrc
 ```
-**2. Create a conda environment for mjrl and install mjrl**:
+### Setup repo and install conda environment
+Navigate to your installation directory and run:
 ```
+git clone git@github.com:GT-STAR-Lab/CIMER.git
 cd mjrl
-# !!! Delete line 21 (mujoco-py) in mjrl/setup/env.yml, later we will install it manually !!!
 conda update conda
 conda env create -f setup/env.yml
-source activate mjrl-env
+conda activate mjrl-env
 pip install -e .
-# Now install mujoco-py
-pip install mujoco-py==2.1.2.14
-# We need to check whether mujoco-py is installed successfully. Run python in current conda environment (mjrl-env) and import mujoco_py.
-# If mujoco_py is installed successfully, it should be (compiled and) imported without errors.
+pip install mujoco-py==2.0.2.8
+```
+Verify the installation of mujoco-py by running `python` in current conda environment (mjrl-env) in terminal and `import mujoco_py`. If mujoco_py is installed successfully, it should be (compiled and) imported without errors.
+```
 python3
 import mujoco_py
-# If mujoco_py is imported for the first time, it will be compiled automatically.
-# If a Cython related error occurs, try changing the version of gcc and Cython
+```
+If a Cython related error occurs, check the version of gcc and Cython
+```
 conda install -c conda-forge gcc=12.1.0
-pip install Cython==3.0.0a10
+pip install "Cython<3"
 ```
 **3. Install mj_envs**:
 ```
