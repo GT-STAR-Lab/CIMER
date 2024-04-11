@@ -161,12 +161,10 @@ python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config
 We indeed provide the learned Koopman Matrix for the Motion Generation policy (Under `CIMER/hand_dapg/dapg/controller_training/koopman_without_vel` folder). If you would like to learn the Motion Generation policy yourself, please refer to our previous project ([KODex](https://sites.google.com/view/kodex-corl)) for more details.
 ## Bibtex
 ```
-@misc{han2024CIMER,
-      title={Learning Prehensile Dexterity by Imitating and Emulating State-only Observations}, 
-      author={Yunhai Han and Zhenyang Chen and Harish Ravichandar},
-      year={2024},
-      eprint={2404.05582},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO}
+@article{han2024CIMER,
+  title={Learning Prehensile Dexterity by Imitating and Emulating State-only Observations},
+  author={Han, Yunhai and Chen, Zhenyang and Ravichandar, Harish},
+  journal={arXiv preprint arXiv:2404.05582},
+  year={2024}
 }
 ```
