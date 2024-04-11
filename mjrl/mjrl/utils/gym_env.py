@@ -2670,11 +2670,6 @@ class GymEnv(object):
                         for _z in range(5): # control frequency: 500HZ / use this to output PD target
                             # for relocation task, it we set a higher control frequency, we can expect a much better PD performance
                             torque_action = PID_controller(self.get_env_state()['qpos'][:num_hand], self.get_env_state()['qvel'][:num_hand])
-                            if IDC_Controller:
-                                NN_input = torch.from_numpy(np.append(self.get_env_state()['qpos'][:num_hand], hand_OriState))
-                                NN_output = Controller(NN_input).detach().numpy()
-                                torque_action[0] = NN_output[0]
-                                torque_action[3] = NN_output[3]
                             next_o, r, done, goal_achieved = self.step(torque_action)    
                             # re-set the experiments, as we finish visualizing the reference motion of KODex
                     r_z_motion[t_ + 1] = self.get_env_state()['qpos'][3].copy()
@@ -2949,11 +2944,6 @@ class GymEnv(object):
                                 num_hand = len(np.append(hand_states_traj[t + 1][:1], a))
                         for _z in range(5): # control frequency: 500HZ / use this to output PD target
                             torque_action = PID_controller(self.get_env_state()['qpos'][:num_hand], self.get_env_state()['qvel'][:num_hand])
-                            if IDC_Controller:
-                                NN_input = torch.from_numpy(np.append(self.get_env_state()['qpos'][:num_hand], hand_states_traj[t + 1]))
-                                NN_output = Controller(NN_input).detach().numpy()
-                                torque_action[0] = NN_output[0]
-                                torque_action[3] = NN_output[3]
                             next_o, r, done, goal_achieved = self.step(torque_action)  
                     ep_returns_mean_act[ep] += (gamma ** t) * r  # only task specific rewards
                     reference = dict()
@@ -3227,11 +3217,6 @@ class GymEnv(object):
                                 num_hand = len(np.append(hand_states_traj[t + 1][:1], a))
                         for _z in range(5): # control frequency: 500HZ / use this to output PD target
                             torque_action = PID_controller(self.get_env_state()['qpos'][:num_hand], self.get_env_state()['qvel'][:num_hand])
-                            if IDC_Controller:
-                                NN_input = torch.from_numpy(np.append(self.get_env_state()['qpos'][:num_hand], hand_states_traj[t + 1]))
-                                NN_output = Controller(NN_input).detach().numpy()
-                                torque_action[0] = NN_output[0]
-                                torque_action[3] = NN_output[3]
                             next_o, r, done, goal_achieved = self.step(torque_action)  
                     ep_returns_noisy_act[ep] += (gamma ** t) * r  # only task specific rewards
                     reference = dict()
@@ -4537,11 +4522,6 @@ class GymEnv(object):
                                 num_hand = len(np.append(hand_states_traj[t + 1][:1], a))
                         for _z in range(5): # control frequency: 500HZ / use this to output PD target
                             torque_action = PID_controller(self.get_env_state()['qpos'][:num_hand], self.get_env_state()['qvel'][:num_hand])
-                            if IDC_Controller:
-                                NN_input = torch.from_numpy(np.append(self.get_env_state()['qpos'][:num_hand], hand_states_traj[t + 1]))
-                                NN_output = Controller(NN_input).detach().numpy()
-                                torque_action[0] = NN_output[0]
-                                torque_action[3] = NN_output[3]
                             next_o, r, done, goal_achieved = self.step(torque_action)  
                     t += 1   
                     current_hinge_pos = next_o[28:29] # door opening angle
