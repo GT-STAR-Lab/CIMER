@@ -17,24 +17,22 @@ cd .mujoco
 ```
 2. Download the MuJoCo version [2.0 binaries](https://www.roboti.us/index.html) and select the mujoco200 Linux option. Or if you are feeling adventurous here’s the direct download link: https://www.roboti.us/download/mujoco200_linux.zip.
 3. Get the license: Go to https://www.roboti.us/license.html
-4. Unzip this file and place it in the directory ∼/.mujoco/mujoco200 and place
-your license key (mjkey.txt) in ∼/.mujoco/mujoco200/bin/mjkey.txt.
-5. Test this installation by navigating to ∼/.mujoco/mujoco200/bin and executing ./simulate ../model/humanoid.xml.
-
-# Add Environment variables to ~/.bashrc
-Add the following 4 commands at the end of `~.bashrc`
+4. Unzip the zipped file and place it in the directory `∼/.mujoco/mujoco200` and place
+your license key (mjkey.txt) in `∼/.mujoco/mujoco200/bin/mjkey.txt` and `~/.mujoco/mjkey.txt`.
+5. Test this installation by navigating to `∼/.mujoco/mujoco200/bin` and executing `./simulate ../model/humanoid.xml.`
+7. Add the following 4 commands at the end of `~/.bashrc`
 ```
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mujoco200/bin
 export MUJOCO_KEY_PATH=~/.mujoco${MUJOCO_KEY_PATH}
 export MUJOCO_PY_FORCE_CPU=True
 alias MJPL='LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so:/usr/lib/nvidia-384/libGL.so'
 ```
-Source ~/.bashrc to commit the changes
+6. Source ~/.bashrc to commit the changes
 ```
 source ~/.bashrc
 ```
 ### Setup repo and install conda environment
-Navigate to your installation directory and run:
+1. Navigate to your installation directory and run:
 ```
 git clone git@github.com:GT-STAR-Lab/CIMER.git
 cd mjrl
@@ -44,21 +42,22 @@ conda activate mjrl-env
 pip install -e .
 pip install mujoco-py==2.0.2.8
 ```
-Verify the installation of mujoco-py by running `python` in current conda environment (mjrl-env) in terminal and `import mujoco_py`. If mujoco_py is installed successfully, it should be (compiled and) imported without errors.
+2. Verify the installation of mujoco-py by running `python` in current conda environment (mjrl-env) in terminal and `import mujoco_py`. If mujoco_py is installed successfully, it should be (compiled and) imported without errors.
 ```
 python3
 import mujoco_py
 ```
-If a Cython related error occurs, check the version of gcc and Cython
+3. Install mj_envs:
+```
+cd ../mj_envs
+pip install -e .
+```
+4. Troubleshooting:
+- Missing GL version: install GLEW by `sudo apt-get install -y libglew-dev`
+- If a Cython related error occurs when compiling (`import mujoco_py`, check the version of gcc and Cython
 ```
 conda install -c conda-forge gcc=12.1.0
 pip install "Cython<3"
-```
-**3. Install mj_envs**:
-```
-cd mj_envs
-conda activate mjrl-env
-pip install -e .
 ```
 
 ## Policy Visualization
