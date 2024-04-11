@@ -17,7 +17,4 @@ setup(
     long_description=read('README.md'),
     url='https://github.com/vikashplus/mj_envs.git',
     author='Movement Control Lab, UW',
-    install_requires=[
-        'click', 'gym==0.13', 'mujoco-py<2.1,>=2.0', 'termcolor',
-    ],
 )
