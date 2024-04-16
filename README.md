@@ -61,7 +61,7 @@ pip install "Cython<3"
 ```
 
 ## Policy Visualization
-We provide with several trained policies for quick visualization. Under `CIMER` folder, run the follow commands:
+We provide with several trained policies for quick visualization. Under `CIMER` folder, run the following commands:
 ### Hammer task
 **CIMER**:
 ```
@@ -112,7 +112,7 @@ MJPL python3 hand_dapg/dapg/SOIL/visualize_policy_on_demos.py --config Samples/D
 ```
 
 ## Policy Training
-We also provide codes to train new policies. Under `CIMER` folder, run the follow commands:
+We also provide codes to train new policies. Under `CIMER` folder, run the following commands:
 ```
 mkdir -p Training/Hammer
 mkdir -p Training/Relocate
