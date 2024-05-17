@@ -60,7 +60,7 @@
 'history_s'     :   2,  # n continuous history pairs (a_{t-n-1:t-1}, s_{t-n:t}), if it is set to be 0, we have ({a_{t-1}, s_t), if it is set to be -1, we only have  (s_t)
 'task_ratio'    :   0.0, # task-specific reward ratio
 'tracking_ratio':   1.0, # tracking reward ratio''
-'hand_track'    :   0.0, # coefficient of hand state tracking
+'hand_track'    :   5.0, # coefficient of hand state tracking
 'object_track'  :   5.0, # coefficient of object state tracking
 'ADD_BONUS_REWARDS'  : 1, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
 'ADD_BONUS_PENALTY'  : 0, # adding the bonus hand tracking panelties (1->enabled; 0->disabled)

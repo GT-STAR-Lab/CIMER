@@ -61,7 +61,7 @@
 'task_ratio'    :   0.0, # task-specific reward ratio
 'tracking_ratio':   1.0, # tracking reward ratio''
 'hand_track'    :   5.0, # coefficient of hand state tracking
-'object_track'  :   0.0, # coefficient of object state tracking
-'ADD_BONUS_REWARDS'  : 0, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
+'object_track'  :   5.0, # coefficient of object state tracking
+'ADD_BONUS_REWARDS'  : 1, # adding the bonus object tracking rewards (1->enabled; 0->disabled)
 'ADD_BONUS_PENALTY'  : 0, # adding the bonus hand tracking panelties (1->enabled; 0->disabled)
 }
