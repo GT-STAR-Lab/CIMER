@@ -23,17 +23,26 @@ USAGE:\n
 @click.option('--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
 @click.option('--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('--episodes', type=int, help='number of episodes to visualize', default=10)
-
-def main(env_name, policy, mode, seed, episodes):
-    e = GymEnv(env_name)
+@click.option('--time', type=int, help='length for simulation', default=100)
+def main(env_name, policy, mode, seed, episodes, time):
+    e = GymEnv(env_name, "PID")
     e.set_seed(seed)
+
+    # NOTE: mod by CZY
+    obs_dim = e.observation_dim
+    ac_dim  = e.action_dim
+    print("environment setup is: ", e.spec)
     if policy is not None:
         pi = pickle.load(open(policy, 'rb'))
     else:
-        pi = MLP(e.spec, hidden_sizes=(32,32), seed=seed, init_log_std=-1.0) # random generated network
+        # pi = MLP(e.spec, hidden_sizes=(32,32), seed=seed, init_log_std=-1.0)
+        pi = MLP(obs_dim, ac_dim, hidden_sizes=(32,32), seed=seed, init_log_std=-1.0) # random generated network
         
     # render policy
-    e.visualize_policy(pi, num_episodes=episodes, horizon=e.horizon, mode=mode, record=False)
+    # ori, init_pos, init_vel = 0,0,0
+    # e.visualize_policy(pi, "test_policy", ori, init_pos, init_vel, num_episodes=episodes, horizon=e.horizon, mode=mode, record=False)
+    for t in range(time):
+        e.render()
 
 if __name__ == '__main__':
     main()

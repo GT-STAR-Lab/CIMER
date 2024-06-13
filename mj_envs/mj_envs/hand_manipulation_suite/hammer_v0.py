@@ -14,6 +14,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.obj_bid = -1
         self.tool_sid = -1
         self.goal_sid = -1
+        self.control_mode = 'Torque'
         for arg in kwargs.values():
             if arg in ['PID', 'Torque']:
                 self.control_mode = arg       

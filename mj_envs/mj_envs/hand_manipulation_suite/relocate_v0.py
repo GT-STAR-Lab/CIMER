@@ -12,6 +12,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.S_grasp_sid = 0
         self.obj_bid = 0
         self.offset = 0  # set it to be -0.05 for power_drill, for others, use 0
+        self.control_mode = 'Torque'
         for arg in kwargs.values():
             if arg in ['PID', 'Torque']:
                 self.control_mode = arg  

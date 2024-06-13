@@ -1,6 +1,13 @@
 from gym.envs.registration import register
 from mjrl.envs.mujoco_env import MujocoEnv
 
+register(
+    id='door-allegro-v0',
+    entry_point='mj_envs.hand_manipulation_suite:DoorAllegroEnvV0',
+    max_episode_steps=200,
+)
+from mj_envs.hand_manipulation_suite.door_allegro_v0 import DoorAllegroEnvV0
+
 # register -> to register the environments used in the experiments -> specify the system dynamics
 # Swing the door open
 register(
