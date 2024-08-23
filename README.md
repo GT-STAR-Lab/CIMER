@@ -1,5 +1,5 @@
 # Learning Prehensile Dexterity by Imitating and Emulating State-only Observations
-This is a repository containing the code for the paper "Learning Prehensile Dexterity by Imitating and Emulating State-only Observations".
+This is a repository containing the code for the IEEE RA-L paper "Learning Prehensile Dexterity by Imitating and Emulating State-only Observations".
 
 Project webpage: [CIMER](https://sites.google.com/view/cimer-2024/)
 
@@ -170,10 +170,12 @@ python3 hand_dapg/dapg/SOIL/job_script.py --output Training/Door/PureRL --config
 We indeed provide the learned Koopman Matrix for the Motion Generation policy (Under `CIMER/hand_dapg/dapg/controller_training/koopman_without_vel` folder). If you would like to learn the Motion Generation policy yourself, please refer to our previous project ([KODex](https://sites.google.com/view/kodex-corl)) for more details.
 ## Bibtex
 ```
-@article{han2024CIMER,
-  title={Learning Prehensile Dexterity by Imitating and Emulating State-only Observations},
-  author={Han, Yunhai and Chen, Zhenyang and Ravichandar, Harish},
-  journal={arXiv preprint arXiv:2404.05582},
-  year={2024}
-}
+@ARTICLE{han2024CIMER,
+  author={Han, Yunhai and Chen, Zhenyang and Williams, Kyle A and Ravichandar, Harish},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={Learning Prehensile Dexterity by Imitating and Emulating State-Only Observations}, 
+  year={2024},
+  volume={9},
+  number={10},
+  pages={8266-8273}}
 ```
