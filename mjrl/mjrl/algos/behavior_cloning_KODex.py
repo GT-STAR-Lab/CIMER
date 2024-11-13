@@ -183,14 +183,15 @@ class BC:
                     object_states_traj[t_ + 1, :] = obj_OriState
             elif self.task_id == 'relocate':
                 init_hand_state = self.eval_data[ep]['handpos']
-                init_objpos = self.eval_data[ep]['objpos'] # converged object position
-                init_objvel = self.eval_data[ep]['objvel']
-                init_objori = self.eval_data[ep]['objorient']
+                # init_objpos = self.eval_data[ep]['objpos'] # converged object position
+                # init_objvel = self.eval_data[ep]['objvel']
+                # init_objori = self.eval_data[ep]['objorient']
                 desired_pos = self.eval_data[ep]['desired_pos']
-                init_objpos_world = desired_pos + init_objpos # in the world frame(on the table)
+                obj_OriState=self.eval_data[ep]['obj_features']
+                # init_objpos_world = desired_pos + init_objpos # in the world frame(on the table)
                 hand_OriState = init_hand_state
-                obj_OriState = np.append(init_objpos, np.append(init_objori, init_objvel))  # ori: represented in the transformed frame (converged to desired pos)
-                obj_OriState_ = np.append(init_objpos_world, np.append(init_objori, init_objvel)) # ori: represented in the world frame
+                # obj_OriState = np.append(init_objpos, np.append(init_objori, init_objvel))  # ori: represented in the transformed frame (converged to desired pos)
+                # obj_OriState_ = np.append(init_objpos_world, np.append(init_objori, init_objvel)) # ori: represented in the world frame
                 num_hand = len(hand_OriState)
                 num_obj = len(obj_OriState)
                 if not self.policy.freeze_base:
@@ -205,18 +206,19 @@ class BC:
                         hand_states_traj[0, :] = hand_OriState[6:30]
                     elif self.robot_dim == 27:
                         hand_states_traj[0, :] = hand_OriState[3:30]
-                object_states_traj[0, :] = obj_OriState_
+                object_states_traj[0, :] = obj_OriState
                 z_t = self.Koopman_obser.z(hand_OriState, obj_OriState)  # initial states in lifted space
                 for t_ in range(kwargs['task_horizon'] - 1):
                     z_t_1_computed = np.dot(self.KODex, z_t)
                     z_t = z_t_1_computed.copy()
                     x_t_1_computed = np.append(z_t_1_computed[:num_hand], z_t_1_computed[2 * num_hand: 2 * num_hand + num_obj])  # retrieved robot & object states
                     hand_OriState = x_t_1_computed[:num_hand]
-                    obj_pos = x_t_1_computed[num_hand: num_hand + 3] # converged object position
-                    obj_pos_world = desired_pos + obj_pos
-                    obj_ori = x_t_1_computed[num_hand + 3: num_hand + 6]
-                    obj_vel = x_t_1_computed[num_hand + 6: num_hand + 12]
-                    obj_OriState = np.append(obj_pos_world, np.append(obj_ori, obj_vel))
+                    obj_OriState = x_t_1_computed[num_hand:]
+                    # obj_pos = x_t_1_computed[num_hand: num_hand + 3] # converged object position
+                    # obj_pos_world = desired_pos + obj_pos
+                    # obj_ori = x_t_1_computed[num_hand + 3: num_hand + 6]
+                    # obj_vel = x_t_1_computed[num_hand + 6: num_hand + 12]
+                    # obj_OriState = np.append(obj_pos_world, np.append(obj_ori, obj_vel))
                     if not self.policy.freeze_base:
                         hand_states_traj[t_ + 1, :] = hand_OriState
                     else:

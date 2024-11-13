@@ -9,7 +9,8 @@ logging.disable(logging.CRITICAL)
 import multiprocessing as mp
 import time as timer
 logging.disable(logging.CRITICAL)
- 
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Single core rollout to sample trajectories
 # =======================================================
 def do_rollout(
@@ -29,6 +30,7 @@ def do_rollout(
         obj_dynamics=True,
         control_mode='Torque',
         PD_controller=None,
+        resnet_model=None
 ):
     """
     :param num_traj:    number of trajectories (int)
@@ -221,31 +223,45 @@ def do_rollout(
                 t += 1
         elif task_id == 'relocate':
             o, desired_pos = env.reset()
+            desired_pos_main=desired_pos
             init_hand_state = o[:30]
             init_objpos_world = o[39:42] # object position in the world frame
             init_objpos_new = init_objpos_world - desired_pos # converged object position
             init_objvel = env.get_env_state()['qvel'][30:36]
             init_objorient = env.get_env_state()['qpos'][33:36]
             hand_OriState = init_hand_state
-            obj_OriState = np.append(init_objpos_new, np.append(init_objorient, init_objvel))  # ori: represented in the transformed frame
-            obj_OriState_ = np.append(init_objpos_world, np.append(init_objorient, init_objvel)) # ori: represented in the original frame
+            rgb, depth = env.env.mj_render()
+            rgb = (rgb.astype(np.uint8) - 128.0) / 128
+            depth = depth[...,np.newaxis]
+            rgbd = np.concatenate((rgb,depth),axis=2)
+            rgbd = np.transpose(rgbd, (2, 0, 1))
+            rgbd = rgbd[np.newaxis, ...]
+            rgbd = torch.from_numpy(rgbd).float().to(device)
+            # desired_pos = Test_data[k][0]['init']['target_pos']
+            desired_pos = desired_pos_main[np.newaxis, ...]
+            desired_pos = torch.from_numpy(desired_pos).float().to(device)
+            implict_objpos = resnet_model(rgbd, desired_pos) 
+            obj_OriState = implict_objpos[0].cpu().detach().numpy()
+            # obj_OriState = np.append(init_objpos_new, np.append(init_objorient, init_objvel))  # ori: represented in the transformed frame
+            # obj_OriState_ = np.append(init_objpos_world, np.append(init_objorient, init_objvel)) # ori: represented in the original frame
             num_hand = len(hand_OriState)
             num_obj = len(obj_OriState)
             hand_states_traj = np.zeros([horizon, num_hand])
             object_states_traj = np.zeros([horizon, num_obj])
             hand_states_traj[0, :] = hand_OriState
-            object_states_traj[0, :] = obj_OriState_
+            object_states_traj[0, :] = obj_OriState
             z_t = Koopman_obser.z(hand_OriState, obj_OriState)  # initial states in lifted space
             for t_ in range(horizon - 1):
                 z_t_1_computed = np.dot(KODex, z_t)
                 z_t = z_t_1_computed.copy()
                 x_t_1_computed = np.append(z_t_1_computed[:num_hand], z_t_1_computed[2 * num_hand: 2 * num_hand + num_obj])  # retrieved robot & object states
                 hand_OriState = x_t_1_computed[:num_hand]
-                obj_pos = x_t_1_computed[num_hand: num_hand + 3] # converged object position
-                obj_pos_world = desired_pos + obj_pos
-                obj_ori = x_t_1_computed[num_hand + 3: num_hand + 6]
-                obj_vel = x_t_1_computed[num_hand + 6: num_hand + 12]
-                obj_OriState = np.append(obj_pos_world, np.append(obj_ori, obj_vel))
+                obj_OriState = x_t_1_computed[num_hand:]
+                # obj_pos = x_t_1_computed[num_hand: num_hand + 3] # converged object position
+                # obj_pos_world = desired_pos + obj_pos
+                # obj_ori = x_t_1_computed[num_hand + 3: num_hand + 6]
+                # obj_vel = x_t_1_computed[num_hand + 6: num_hand + 12]
+                # obj_OriState = np.append(obj_pos_world, np.append(obj_ori, obj_vel))
                 hand_states_traj[t_ + 1, :] = hand_OriState
                 object_states_traj[t_ + 1, :] = obj_OriState
             done = False
@@ -290,11 +306,23 @@ def do_rollout(
                     elif policy.m == 27:
                         current_hand_state = o[3:30]
                         num_hand = 27
-                current_objpos = o[39:42] # object position in the world frame
-                current_objvel = env.get_env_state()['qvel'][30:36]
-                current_objori = env.get_env_state()['qpos'][33:36]
+                # current_objpos = o[39:42] # object position in the world frame
+                # current_objvel = env.get_env_state()['qvel'][30:36]
+                # current_objori = env.get_env_state()['qpos'][33:36]
                 hand_OriState = current_hand_state
-                obj_OriState = np.append(current_objpos, np.append(current_objori, current_objvel))  # ori: represented in the original frame
+                # obj_OriState = np.append(current_objpos, np.append(current_objori, current_objvel))  # ori: represented in the original frame
+                rgb, depth = env.env.mj_render()
+                rgb = (rgb.astype(np.uint8) - 128.0) / 128
+                depth = depth[...,np.newaxis]
+                rgbd = np.concatenate((rgb,depth),axis=2)
+                rgbd = np.transpose(rgbd, (2, 0, 1))
+                rgbd = rgbd[np.newaxis, ...]
+                rgbd = torch.from_numpy(rgbd).float().to(device)
+                # desired_pos = Test_data[k][0]['init']['target_pos']
+                desired_pos = desired_pos_main[np.newaxis, ...]
+                desired_pos = torch.from_numpy(desired_pos).float().to(device)
+                implict_objpos = resnet_model(rgbd, desired_pos) 
+                obj_OriState = implict_objpos[0].cpu().detach().numpy()
                 if history_state >= 0: # we add the history information into policy inputs
                     if obj_dynamics:  # if we use the object dynamics as part of policy input
                         policy_input = np.zeros((num_future_s + history_state + 1) * (num_hand + num_obj) + (history_state + 1) * num_hand)
@@ -433,30 +461,45 @@ def do_rollout(
                 # add tracking rewards
                 reference = dict()
                 reference['hand_state'] = hand_states_traj[t + 1]
-                reference['obj_pos'] = object_states_traj[t + 1][:3]
-                reference['obj_vel'] = object_states_traj[t + 1][6:]
-                reference['obj_ori'] = object_states_traj[t + 1][3:6]
+                reference['obj_feature'] = object_states_traj[t + 1]
+                # reference['obj_pos'] = object_states_traj[t + 1][:3]
+                # reference['obj_vel'] = object_states_traj[t + 1][6:]
+                # reference['obj_ori'] = object_states_traj[t + 1][3:6]
                 obs = dict()
                 obs['hand_state'] = next_o[:30]
-                obs['obj_pos'] = next_o[39:42]
-                obs['obj_vel'] = env.get_env_state()['qvel'][30:36]
-                obs['obj_ori'] = env.get_env_state()['qpos'][33:36]    
-                if not policy.freeze_base: 
-                    tracking_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['total_reward']   
-                    tracking_hand_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['hand_reward']   
-                    tracking_object_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['object_reward']  
-                else:
-                    if not policy.include_Rots: # only on fingers
-                        tracking_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['total_reward']   
-                        tracking_hand_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['hand_reward']   
-                        tracking_object_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['object_reward'] 
-                    else:
-                        tracking_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['total_reward']   
-                        tracking_hand_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['hand_reward']   
-                        tracking_object_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['object_reward'] 
+                rgb, depth = env.env.mj_render()
+                rgb = (rgb.astype(np.uint8) - 128.0) / 128
+                depth = depth[...,np.newaxis]
+                rgbd = np.concatenate((rgb,depth),axis=2)
+                rgbd = np.transpose(rgbd, (2, 0, 1))
+                rgbd = rgbd[np.newaxis, ...]
+                rgbd = torch.from_numpy(rgbd).float().to(device)
+                # desired_pos = Test_data[k][0]['init']['target_pos']
+                desired_pos = desired_pos_main[np.newaxis, ...]
+                desired_pos = torch.from_numpy(desired_pos).float().to(device)
+                implict_objpos = resnet_model(rgbd, desired_pos) 
+                # obj_OriState = implict_objpos[0].cpu().detach().numpy()
+                obs['obj_feature']= implict_objpos[0].cpu().detach().numpy()
+                # obs['obj_pos'] = next_o[39:42]
+                # obs['obj_vel'] = env.get_env_state()['qvel'][30:36]
+                # obs['obj_ori'] = env.get_env_state()['qpos'][33:36]    
+                # if not policy.freeze_base: 
+                #     tracking_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['total_reward']   
+                #     tracking_hand_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['hand_reward']   
+                #     tracking_object_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['object_reward']  
+                # else:
+                #     if not policy.include_Rots: # only on fingers
+                #         tracking_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['total_reward']   
+                #         tracking_hand_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['hand_reward']   
+                #         tracking_object_reward = Comp_tracking_reward_relocate_freeze_base(reference, obs, coeffcients)['object_reward'] 
+                #     else:
+                #         tracking_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['total_reward']   
+                #         tracking_hand_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['hand_reward']   
+                #         tracking_object_reward = Comp_tracking_reward_relocate_include_Rots(reference, obs, coeffcients)['object_reward'] 
+                tracking_reward = Comp_tracking_reward_relocate(reference, obs, coeffcients)['total_reward']
                 tracking_rewards.append(tracking_reward) 
-                tracking_hand_rewards.append(tracking_hand_reward)
-                tracking_object_rewards.append(tracking_object_reward)
+                # tracking_hand_rewards.append(tracking_hand_reward)
+                # tracking_object_rewards.append(tracking_object_reward)
                 r = r * coeffcients['task_ratio'] + tracking_reward * coeffcients['tracking_ratio']  # total reward
                 # below is important to ensure correct env_infos for the timestep
                 env_info = env_info_step if env_info_base == {} else env_info_base
@@ -1010,6 +1053,7 @@ def sample_paths(
         obj_dynamics=True,
         control_mode='Torque',
         PD_controller=None,
+        resnet_model=None
         ):
     num_cpu = 1 if num_cpu is None else num_cpu
     num_cpu = mp.cpu_count() if num_cpu == 'max' else num_cpu
@@ -1018,7 +1062,7 @@ def sample_paths(
         input_dict = dict(num_traj=num_traj, env=env, task_id = task_id, policy=policy,
                           eval_mode=eval_mode, horizon=horizon, future_state=future_state, history_state=history_state, base_seed=base_seed,
                           env_kwargs=env_kwargs, Koopman_obser=Koopman_obser, KODex=KODex,coeffcients=coeffcients,obj_dynamics=obj_dynamics,
-                          control_mode=control_mode,PD_controller=PD_controller)
+                          control_mode=control_mode,PD_controller=PD_controller,resnet_model=resnet_model)
         # dont invoke multiprocessing if not necessary
         return do_rollout(**input_dict)
 
@@ -1030,7 +1074,7 @@ def sample_paths(
                           eval_mode=eval_mode, horizon=horizon, future_state=future_state,
                           history_state=history_state, base_seed=base_seed + i * paths_per_cpu,
                           env_kwargs=env_kwargs, Koopman_obser=Koopman_obser, KODex=KODex,coeffcients=coeffcients,obj_dynamics=obj_dynamics,
-                          control_mode=control_mode,PD_controller=PD_controller)
+                          control_mode=control_mode,PD_controller=PD_controller, resnet_model=resnet_model)
         input_dict_list.append(input_dict)
     if suppress_print is False:
         start_time = timer.time()
@@ -1154,20 +1198,22 @@ def Comp_tracking_reward_relocate(reference, states, coeffcients):
     # the hand tracking parameters are different for fingers and base
     r_hand = coeffcients['hand_track'] * np.exp(-5 * np.linalg.norm(reference['hand_state'][:6] - states['hand_state'][:6]) ** 2 / len(reference['hand_state'][:6]))
     r_hand += coeffcients['hand_track'] * np.exp(-5 * np.linalg.norm(reference['hand_state'][6:] - states['hand_state'][6:]) ** 2 / len(reference['hand_state'][6:]))
-    r_obj_ori = coeffcients['object_track'] * np.exp(-5 * np.linalg.norm(reference['obj_ori'] - states['obj_ori']) ** 2 / len(reference['obj_ori']))
-    r_obj_pos = coeffcients['object_track'] * np.exp(-5 * np.linalg.norm(reference['obj_pos'] - states['obj_pos']) ** 2 / len(reference['obj_pos']))
+    # r_obj_ori = coeffcients['object_track'] * np.exp(-5 * np.linalg.norm(reference['obj_ori'] - states['obj_ori']) ** 2 / len(reference['obj_ori']))
+    # r_obj_pos = coeffcients['object_track'] * np.exp(-5 * np.linalg.norm(reference['obj_pos'] - states['obj_pos']) ** 2 / len(reference['obj_pos']))
+    r_obj_feature = coeffcients['object_track'] * np.sum((np.square(reference['obj_feature'] - states['obj_feature'])))/len(states['obj_feature'])
+
     if coeffcients['ADD_BONUS_REWARDS'] == 1:    
         # bonus of object tracking
-        if np.linalg.norm(reference['obj_pos'] - states['obj_pos']) < 0.02:
-            r_obj_pos += 25
-        elif np.linalg.norm(reference['obj_pos'] - states['obj_pos']) < 0.05:
-            r_obj_pos += 10
-        elif np.linalg.norm(reference['obj_pos'] - states['obj_pos']) < 0.1:
-            r_obj_pos += 5
-    r_obj_vel = coeffcients['object_track'] * np.exp(-400 * np.linalg.norm(reference['obj_vel'] - states['obj_vel']) ** 2 / len(reference['obj_vel']))
-    rewards['total_reward'] = r_hand + r_obj_pos 
+        if np.linalg.norm(reference['obj_feature'] - states['obj_feature']) < 0.2:
+            r_obj_feature += 25
+        elif np.linalg.norm(reference['obj_feature'] - states['obj_feature']) < 0.5:
+            r_obj_feature += 10
+        elif np.linalg.norm(reference['obj_feature'] - states['obj_feature']) < 1:
+            r_obj_feature += 5
+    # r_obj_vel = coeffcients['object_track'] * np.exp(-400 * np.linalg.norm(reference['obj_vel'] - states['obj_vel']) ** 2 / len(reference['obj_vel']))
+    rewards['total_reward'] = r_hand + r_obj_feature
     rewards['hand_reward'] = r_hand
-    rewards['object_reward'] = r_obj_pos 
+    rewards['object_reward'] = r_obj_feature
     return rewards
 
 def Comp_tracking_reward_relocate_freeze_base(reference, states, coeffcients):

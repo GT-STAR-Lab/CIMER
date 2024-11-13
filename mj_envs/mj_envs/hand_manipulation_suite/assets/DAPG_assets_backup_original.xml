@@ -49,14 +49,12 @@
         <material name="table2d" texture="marble2d" reflectance="0.3" rgba="0.8 0.8 0.8 1" />
         <material name="tablecube" texture="marblecube" rgba="0.8 0.8 0.8 1" />
         <material name="MatFoil" texture="foil" specular="1" shininess="0.3" rgba="0.9 0.9 0.9 1" />
-        <!-- <material name="MatPlane" specular="0.3" shininess="0.3" rgba="0.3 0.3 0.2 1" /> -->
+        <material name="MatPlane" specular="0.3" shininess="0.3" rgba="0.3 0.3 0.2 1" />
         <material name="MatWood" texture="wood" texrepeat="3 3" specular="0.4" shininess="0.1" />
         <material name="MatSquare" texture="square" specular="1" shininess="0.6" rgba="0.8 0.8 0.8 1" />
         <material name="MatWoodR" texture="wood" specular="1" shininess="0.3" rgba="1 0.5 0.5 1" />
         <material name="MatWoodG" texture="wood" specular="1" shininess="0.3" rgba="0.2 1 0.2 1" />
         <material name="MatWoodB" texture="woodb" specular="1" shininess="0.3" />
-        <texture name="texplane" type="2d" height="1" width="1" file="oak_floorboard.png"/>
-        <material name="MatPlane" reflectance="0.01" texture="texplane" texrepeat="4 4" texuniform="true"/>
         <mesh name="forearm_simple" file="forearm_simple.stl" scale="1 1 1"/>
         <mesh name="wrist" file="wrist.stl" />
         <mesh name="palm" file="palm.stl" />

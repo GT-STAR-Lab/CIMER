@@ -1,7 +1,8 @@
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mujoco_py import MjViewer
+from mujoco_py import MjViewer, MjRenderContextOffscreen
+
 import os
 
 ADD_BONUS_REWARDS = True
@@ -58,6 +59,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
         palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
         target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
+        # print("from the relocation environment file ",palm_pos,obj_pos,target_pos)
         # print("()palm_pos: ", palm_pos)
         # print("()obj_pos: ", obj_pos)
         reward = -0.1*np.linalg.norm(palm_pos-obj_pos)              # take hand to object
@@ -72,7 +74,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
                 reward += 10.0                                          # bonus for object close to target
             if np.linalg.norm(obj_pos-target_pos) < 0.05:
                 reward += 20.0                                          # bonus for object "very" close to target
-
+        
         goal_achieved = True if np.linalg.norm(obj_pos-target_pos) < 0.1 else False
         return ob, reward, False, dict(goal_achieved=goal_achieved)  # should the return be goal_achieved instead of False?
 
@@ -190,8 +192,9 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.sim.forward()
 
     def mj_viewer_setup(self):
-        self.viewer = MjViewer(self.sim)
-        self.viewer.cam.azimuth = 30
+        self.viewer = MjRenderContextOffscreen(self.sim, -1)
+        # self.viewer = MjViewer(self.sim)
+        self.viewer.cam.azimuth = 90
         self.sim.forward()
         self.viewer.cam.distance = 1.5
 
@@ -205,3 +208,15 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
         return success_percentage
+
+    def get_obs_dict(self, sim):
+        # qpos for hand, xpos for obj, xpos for target
+        obs_dict = {}
+        obs_dict['time'] = np.array([sim.data.time])
+        obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
+        obs_dict['palm_obj_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.body_xpos[self.obj_bid]
+        obs_dict['palm_tar_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.site_xpos[self.target_obj_sid]
+        obs_dict['obj_tar_err'] = sim.data.body_xpos[self.obj_bid] - sim.data.site_xpos[self.target_obj_sid]
+        # keys missing from DAPG-env but needed for rewards calculations
+        obs_dict['obj_pos']  = sim.data.body_xpos[self.obj_bid].copy()
+        return obs_dict

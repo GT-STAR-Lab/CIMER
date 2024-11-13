@@ -83,6 +83,7 @@ class BatchREINFORCE:
                    obj_dynamics=True,
                    control_mode='Torque',
                    PD_controller=None,
+                   resnet_model=None
                    ):
         print("enter this function -- batch_reinforce")
         # Clean up input arguments
@@ -94,7 +95,7 @@ class BatchREINFORCE:
         ts = timer.time()
         if sample_mode == 'trajectories':
             input_dict = dict(num_traj=N, env=env, task_id = self.env.env_id.split('-')[0], policy=self.policy, horizon=horizon,future_state=future_state,history_state=history_state,
-                              base_seed=self.seed, num_cpu=num_cpu, env_kwargs=env_kwargs, Koopman_obser=Koopman_obser, KODex=KODex, coeffcients=coeffcients,obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller)
+                              base_seed=self.seed, num_cpu=num_cpu, env_kwargs=env_kwargs, Koopman_obser=Koopman_obser, KODex=KODex, coeffcients=coeffcients,obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller, resnet_model=resnet_model)
             paths = trajectory_sampler.sample_paths(**input_dict)  # obtained the generated paths using the current policy
         elif sample_mode == 'samples':
             input_dict = dict(num_samples=N, env=env, policy=self.policy, horizon=horizon,future_state=future_state,history_state=history_state,

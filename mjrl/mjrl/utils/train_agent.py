@@ -81,6 +81,7 @@ def train_agent(job_name, agent,
                 obj_dynamics=True,
                 control_mode='Torque',
                 PD_controller=None,
+                resnet_model=None
                 ):
     plot_keys.append('eval_tracking_hand_rewards')
     plot_keys.append('eval_tracking_object_rewards')
@@ -141,7 +142,7 @@ def train_agent(job_name, agent,
             best_eval_perf_sr = eval_curve_sr[i-1]
 
         N = num_traj if sample_mode == 'trajectories' else num_samples
-        args = dict(N=N, sample_mode=sample_mode, horizon=task_horizon, future_state=future_state, history_state = history_state, gamma=gamma, gae_lambda=gae_lambda, num_cpu=num_cpu, Koopman_obser=Koopman_obser,KODex=KODex,coeffcients=coeffcients,obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller)
+        args = dict(N=N, sample_mode=sample_mode, horizon=task_horizon, future_state=future_state, history_state = history_state, gamma=gamma, gae_lambda=gae_lambda, num_cpu=num_cpu, Koopman_obser=Koopman_obser,KODex=KODex,coeffcients=coeffcients,obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller, resnet_model=resnet_model)
 
         # Before RL training, we first run the evaluation on the warm-started policy
         if evaluation_rollouts is not None and evaluation_rollouts > 0:
@@ -150,7 +151,7 @@ def train_agent(job_name, agent,
                                         horizon=task_horizon, future_state=future_state, history_state=history_state,
                                       env=e, task_id = e.env_id.split('-')[0], eval_mode=True, base_seed=seed,
                                       Koopman_obser=Koopman_obser, KODex=KODex,coeffcients=coeffcients_eval,
-                                      obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller)
+                                      obj_dynamics=obj_dynamics,control_mode=control_mode,PD_controller=PD_controller, resnet_model=resnet_model)
             mean_pol_perf = np.mean([np.sum(path['rewards']) for path in eval_paths])  # (not discounted) mean combined rewards
             mean_task_rewards = np.mean([np.sum(path['task_rewards']) for path in eval_paths])  # (not discounted) mean task rewards
             mean_tracking_rewards = np.mean([np.sum(path['tracking_rewards']) for path in eval_paths])  # (not discounted) mean tracking rewards

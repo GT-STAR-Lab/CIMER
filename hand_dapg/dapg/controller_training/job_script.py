@@ -3,6 +3,7 @@ This is a job script for controller learning for KODex 1.0
 """
 
 from re import A
+from mjrl.utils.resnet import *
 from mjrl.utils.gym_env import GymEnv
 from mjrl.policies.gaussian_mlp import MLP
 from mjrl.baselines.quadratic_baseline import QuadraticBaseline
@@ -24,8 +25,17 @@ import mj_envs   # read the env files (task files)
 import time as timer
 import pickle
 import argparse
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+from IPython.display import clear_output
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-def demo_playback(demo_paths, num_demo, task_id):
+device = "cuda" if torch.cuda.is_available() else "cpu"
+def demo_playback(e, resnet_model, demo_paths, num_demo, task_id):
     Training_data = []
     print("Begin loading demo data!")
     # sample_index = np.random.choice(len(demo_paths), num_demo, replace=False)  # Random data is used
@@ -45,11 +55,31 @@ def demo_playback(demo_paths, num_demo, task_id):
             state_dict['desired_ori'] = obs[36:39] # desired orientation (an unit vector in the world frame)
             state_dict['objorient'] = obs[33:36] # initial orientation (an unit vector in the world frame)
         elif task_id == 'relocate':
+            e.reset()
+            e.set_env_state(path['init_state_dict'])
             observations = path['observations']  
             observations_visualize = path['observations_visualization']
             handVelocity = path['handVelocity'] 
             obs = observations[0] 
             obs_visual = observations_visualize[0]
+            rgb, depth = e.env.mj_render()
+            # plt.imshow(e.env.mj_render()[0])
+            # plt.savefig("/home/pratik/Desktop/mjrl_repo/CIMER_KOROL/CIMER/hand_dapg/dapg/controller_training/outputttt.jpg")
+            # break
+            rgb = (rgb.astype(np.uint8) - 128.0) / 128
+            depth = depth[...,np.newaxis]
+            rgbd = np.concatenate((rgb,depth),axis=2)
+            rgbd = np.transpose(rgbd, (2, 0, 1))
+            rgbd = rgbd[np.newaxis, ...]
+            rgbd = torch.from_numpy(rgbd).float().to(device)
+            # desired_pos = Test_data[k][0]['init']['target_pos']
+            desired_pos=obs[45:48]
+
+            desired_pos = desired_pos[np.newaxis, ...]
+            desired_pos = torch.from_numpy(desired_pos).float().to(device)
+            implict_objpos = resnet_model(rgbd, desired_pos) 
+            obj_OriState = implict_objpos[0].cpu().detach().numpy()
+            
             state_dict['init_states'] = path['init_state_dict']
             state_dict['handpos'] = obs[:30]
             state_dict['handvel'] = handVelocity[0][:30]
@@ -58,6 +88,7 @@ def demo_playback(demo_paths, num_demo, task_id):
             state_dict['objpos'] = objpos - obs[45:48] # converged object position
             state_dict['objorient'] = obs_visual[33:36]
             state_dict['objvel'] = handVelocity[0][30:]
+            state_dict['obj_features']=obj_OriState
         elif task_id == 'door':
             observations = path['observations']  
             observations_visualize = path['observations_visualization']
@@ -74,7 +105,6 @@ def demo_playback(demo_paths, num_demo, task_id):
             handVelocity = path['handVelocity'] 
             obs = observations[0]
             allvel = handVelocity[0]
-            state_dict['init_states'] = path['init_state_dict']
             state_dict['handpos'] = obs[:26]
             state_dict['handvel'] = allvel[:26]
             state_dict['objpos'] = obs[49:52] + obs[42:45] 
@@ -85,6 +115,15 @@ def demo_playback(demo_paths, num_demo, task_id):
     print("Finish loading demo data!")
     return Training_data
 
+
+
+#Resnet Model
+
+
+resnet_model = ClassificationNetwork18_woDCT(feat_dim = 8)
+resnet_model = resnet_model.float()
+resnet_model.eval()
+resnet_model = resnet_model.to(device)
 # ===============================================================================
 # Get command line arguments
 # ===============================================================================
@@ -93,6 +132,7 @@ parser = argparse.ArgumentParser(description='Policy gradient algorithms with de
 parser.add_argument('--output', type=str, required=True, help='location to store results')
 parser.add_argument('--config', type=str, required=True, help='path to config file with exp params')
 parser.add_argument('--eval_data', type=str, required=True, help='absolute path to evaluation data')
+parser.add_argument('--resnet_weights',type=str,required=True, help='absolute path to resnet model weights' )
 parser.add_argument('--pre_trained_path', type=str, required=False, default='none', help='if not none -> training on new objects for testing quick adaptation')
 args = parser.parse_args()
 with open(args.config, 'r') as f:
@@ -107,7 +147,7 @@ EXP_FILE = JOB_DIR + '/job_config.json'
 with open(EXP_FILE, 'w') as f:
     json.dump(job_data, f, indent=4)
 KODex = np.load(os.getcwd() + job_data['matrix_file'] + job_data['env'].split('-')[0] + '/koopmanMatrix.npy')  # loading KODex reference dynamics
-
+print(KODex)
 # ===============================================================================
 # Set up the controller parameter
 # ===============================================================================
@@ -116,6 +156,13 @@ PID_P = 10
 PID_D = 0.005  
 Simple_PID = PID(PID_P, 0.0, PID_D)
 
+# loading model
+PATH=args.resnet_weights
+resnet_model.load_state_dict(torch.load(PATH, weights_only=True))
+resnet_model.eval()
+for param in resnet_model.parameters():
+  print(param.data)
+  break
 # ===============================================================================
 # Task specification
 # ===============================================================================
@@ -132,7 +179,7 @@ elif task_id == 'relocate':
     except:
         job_data['object'] = '' # default setting
     num_robot_s = 30
-    num_object_s = 12
+    num_object_s = 8
     task_horizon = 100
 elif task_id == 'door':
     num_robot_s = 28
@@ -206,8 +253,9 @@ policy = MLP(observation_dim = observation_dim, action_dim = num_robot_s, policy
         hidden_sizes=job_data['policy_size'], seed=job_data['fixed_seed'], init_log_std = job_data['init_log_std'], min_log_std = job_data['min_log_std'], freeze_base=job_data['freeze_base'], include_Rots=job_data['include_Rots'])
 baseline = MLPBaseline(inp_dim = observation_dim, reg_coef=1e-3, batch_size=job_data['vf_batch_size'],hidden_sizes=job_data['vf_size'],
                        epochs=job_data['vf_epochs'], learn_rate=job_data['vf_learn_rate'])  # the baseline model used
-demos = pickle.load(open(args.eval_data, 'rb'))
-Eval_data = demo_playback(demos, len(demos), task_id)
+# demos = pickle.load(open(args.eval_data, 'rb'))
+demos=pickle.load(open('/home/pratik/Desktop/mjrl_repo/CIMER_KOROL/KOROL/Korol/Relocation/Data/Relocate_task.pickle', 'rb'))
+Eval_data = demo_playback(e, resnet_model, demos, len(demos), task_id)
 coeffcients = dict()
 coeffcients['task_ratio'] = job_data['task_ratio']
 coeffcients['tracking_ratio'] = job_data['tracking_ratio']
@@ -216,11 +264,11 @@ coeffcients['object_track'] = job_data['object_track']
 coeffcients['ADD_BONUS_REWARDS'] = 1 # when evaluating the policy, it is always set to be enabled
 coeffcients['ADD_BONUS_PENALTY'] = 1
 
-if job_data['eval_rollouts'] >= 1:  
-    # in this function, they also set the seed.
-    score = e.evaluate_policy(Eval_data, Simple_PID, coeffcients, Koopman_obser, KODex, task_horizon, job_data['future_s'], job_data['history_s'], policy, num_episodes=len(Eval_data), obj_dynamics = job_data['obj_dynamics'])  # noise-free actions
-    # score[0][0] -> mean rewards for rollout
-    print("On initial policy, (gamma = 1) mean task reward = %f, mean tracking reward = %f" % (score[0][0], score[0][4]))
+# if job_data['eval_rollouts'] >= 1:  
+#     # in this function, they also set the seed.
+#     score = e.evaluate_policy(resnet_model, Eval_data, Simple_PID, coeffcients, Koopman_obser, KODex, task_horizon, job_data['future_s'], job_data['history_s'], policy, num_episodes=len(Eval_data), obj_dynamics = job_data['obj_dynamics'])  # noise-free actions
+#     # score[0][0] -> mean rewards for rollout
+#     print("On initial policy, (gamma = 1) mean task reward = %f, mean tracking reward = %f" % (score[0][0], score[0][4]))
 pickle.dump(policy, open(JOB_DIR + '/Initial_policy_without_BC.pickle', 'wb'))
 if args.pre_trained_path == 'none':  # training from scratch, instead of applying fine-tuning on new objects
     bc_agent = BC(JOB_DIR, Eval_data, policy=policy, refer_motion = KODex, Koopman_obser = Koopman_obser, task_id = task_id,
@@ -261,13 +309,13 @@ if args.pre_trained_path == 'none':  # training from scratch, instead of applyin
         print("Running BC for motion adapter with reference motion")
         print("========================================")
         data_augment_params = {'bc_augment': job_data['bc_augment'], 'bc_hand_noise': job_data['bc_hand_noise'], 'bc_obj_noise' : job_data['bc_obj_noise'], 'bc_aug_size': job_data['bc_aug_size']}
-        bc_agent.train(save_policy=True, num_traj = num_traj, future_s = job_data['future_s'], history_s = job_data['history_s'], task_horizon = task_horizon, data_augment_params = data_augment_params)
+        bc_agent.train(save_policy=True, num_traj = num_traj, future_s = job_data['future_s'], history_s = job_data['history_s'], task_horizon = task_horizon, data_augment_params = data_augment_params, resnet_model=resnet_model)
         print("BC training complete !!!")
         print("time taken = %f" % (timer.time() - ts))
         print("========================================")
-        score = e.evaluate_policy(Eval_data, Simple_PID, coeffcients, Koopman_obser, KODex, task_horizon, job_data['future_s'], job_data['history_s'], policy, num_episodes=len(Eval_data), obj_dynamics = job_data['obj_dynamics'])  # noise-free actions
+        # score = e.evaluate_policy(resnet_model, Eval_data, Simple_PID, coeffcients, Koopman_obser, KODex, task_horizon, job_data['future_s'], job_data['history_s'], policy, num_episodes=len(Eval_data), obj_dynamics = job_data['obj_dynamics'])  # noise-free actions
         # score[0][0] -> mean rewards for rollout
-        print("On BC policy, (gamma = 1) mean task reward = %f, mean tracking reward = %f" % (score[0][0], score[0][4])) 
+        # print("On BC policy, (gamma = 1) mean task reward = %f, mean tracking reward = %f" % (score[0][0], score[0][4])) 
 else:  # loading the policies that are pre-trained on other objects and quick adapt on new objects
     print("load the policy from %s"%(args.pre_trained_path))
     with open(args.pre_trained_path, 'rb') as fp:
@@ -330,6 +378,7 @@ train_agent(job_name=JOB_DIR,
             obj_dynamics=job_data['obj_dynamics'],
             control_mode=job_data['control_mode'],
             PD_controller=Simple_PID,
+            resnet_model=resnet_model
             )
 print("time taken = %f" % (timer.time()-ts))
 

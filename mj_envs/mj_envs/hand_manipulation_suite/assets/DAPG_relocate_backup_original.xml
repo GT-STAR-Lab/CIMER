@@ -20,10 +20,8 @@
 
     <!-- ======= WORLD ======= -->
     <worldbody>
-        <!-- <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/> -->
-        <light directional='false' diffuse='.8 .8 .8' specular='0.03 0.03 0.03' pos='-1 -1.0 3.0' dir='1 1.0 -3'/>
-        <light directional='false' diffuse='2 1.6 0' specular='0.03 0.03 0.03' pos='2.604 2.1 1.5' dir='0 0 -1' cutoff="90" exponent="5"/>
-        <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="MatPlane" />
+        <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
+        <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="groundplane" />
         <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
         <!-- Camera for the VIL paper -->
         <camera name="vil_camera" pos="0 -1.2 1.2" quat="0.92388 0.382683 0 0" />
