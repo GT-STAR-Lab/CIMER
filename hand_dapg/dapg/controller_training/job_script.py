@@ -1,6 +1,9 @@
 """
 This is a job script for controller learning for KODex 1.0
 """
+import sys
+sys.path.append('/home/pshah479/Desktop/mjrl_repo/CIMER/mjrl')
+
 
 from re import A
 from mjrl.utils.resnet import *
@@ -33,8 +36,10 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 from IPython.display import clear_output
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import numpy as np
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+print("device: ",device)
 def demo_playback(e, resnet_model, demo_paths, num_demo, task_id):
     Training_data = []
     print("Begin loading demo data!")
@@ -254,7 +259,7 @@ policy = MLP(observation_dim = observation_dim, action_dim = num_robot_s, policy
 baseline = MLPBaseline(inp_dim = observation_dim, reg_coef=1e-3, batch_size=job_data['vf_batch_size'],hidden_sizes=job_data['vf_size'],
                        epochs=job_data['vf_epochs'], learn_rate=job_data['vf_learn_rate'])  # the baseline model used
 # demos = pickle.load(open(args.eval_data, 'rb'))
-demos=pickle.load(open('/home/pratik/Desktop/mjrl_repo/CIMER_KOROL/KOROL/Korol/Relocation/Data/Relocate_task.pickle', 'rb'))
+demos=pickle.load(open('/home/pshah479/Desktop/mjrl_repo/Relocation/Data/Relocate_task.pickle', 'rb'))
 Eval_data = demo_playback(e, resnet_model, demos, len(demos), task_id)
 coeffcients = dict()
 coeffcients['task_ratio'] = job_data['task_ratio']

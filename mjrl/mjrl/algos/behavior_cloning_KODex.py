@@ -14,7 +14,7 @@ from mjrl.KODex_utils.coord_trans import ori_transform, ori_transform_inverse
 from tqdm import tqdm
 import pickle
 import os
-
+import pandas as pd
 class BC:
     def __init__(self, job_dir,
                  eval_data,
@@ -137,6 +137,7 @@ class BC:
         os.chdir(previous_dir)
 
     def generate_data(self, **kwargs):
+        temp=[]
         self.robot_dim = self.robot_dim
         self.obj_dim =self.obj_dim
         if kwargs['history_s'] >= 0:
@@ -182,6 +183,7 @@ class BC:
                     hand_states_traj[t_ + 1, :] = hand_OriState
                     object_states_traj[t_ + 1, :] = obj_OriState
             elif self.task_id == 'relocate':
+                temp_resnet_features=[]
                 init_hand_state = self.eval_data[ep]['handpos']
                 # init_objpos = self.eval_data[ep]['objpos'] # converged object position
                 # init_objvel = self.eval_data[ep]['objvel']
@@ -214,6 +216,8 @@ class BC:
                     x_t_1_computed = np.append(z_t_1_computed[:num_hand], z_t_1_computed[2 * num_hand: 2 * num_hand + num_obj])  # retrieved robot & object states
                     hand_OriState = x_t_1_computed[:num_hand]
                     obj_OriState = x_t_1_computed[num_hand:]
+                    if ep<10:
+                        temp_resnet_features.append(np.array(obj_OriState))
                     # obj_pos = x_t_1_computed[num_hand: num_hand + 3] # converged object position
                     # obj_pos_world = desired_pos + obj_pos
                     # obj_ori = x_t_1_computed[num_hand + 3: num_hand + 6]
@@ -227,6 +231,10 @@ class BC:
                         elif self.robot_dim == 27:
                             hand_states_traj[t_ + 1, :] = hand_OriState[3:30]
                     object_states_traj[t_ + 1, :] = obj_OriState
+                if ep<10:
+                    temp.append(temp_resnet_features)
+                if ep==10:
+                    np.save('bc_resnet_features.npy', np.array(temp))
             elif self.task_id == 'door':
                 init_hand_state = self.eval_data[ep]['handpos']
                 init_objpos = self.eval_data[ep]['objpos']

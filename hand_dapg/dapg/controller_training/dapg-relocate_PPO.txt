@@ -11,7 +11,7 @@
 'PPO_clip'      :   0.2,
 'num_cpu'       :   1,   # num_cpu seems to correspond to the num of physical cpus
 'save_freq'     :   25,
-'eval_rollouts' :   200,   #200
+'eval_rollouts' :   20,   #200
 'obj_dynamics'  :   True,  # set it to be true if we use predicted object dynamics. We are targeting a task-agnostic controller, we shouod not used precited object dynamics (always set to be False).
 'control_mode'  :   'PID', # Either 'Torque' or 'PID', since we consider as a motion adaptor, we should stick with PID controller
 'policy_output' :   'jp', # jp->joint position; djp->delta joint position
@@ -45,8 +45,8 @@
 'rl_desired_kl' :   0.0,  # desired KL divergence used to adjust the step size, set it to be non-zero to enable it
 'rl_gamma'      :   0.98,  # to keep tracking, we should set gamma larger
 'rl_gae'        :   0.97,
-'rl_num_traj'   :   200,
-'rl_num_iter'   :   501,
+'rl_num_traj'   :   20,
+'rl_num_iter'   :   11,
 'adv_scale'     :   1.,     # advantages = adv_scale * advantages
 'regularizer'   :   'none', 
 'lam_0'         :   1e-2,

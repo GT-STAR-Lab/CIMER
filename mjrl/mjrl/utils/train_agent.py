@@ -8,6 +8,7 @@ from mjrl.samplers.core import sample_paths
 import numpy as np
 import pickle
 import time as timer
+import time
 import os
 import copy
 from tqdm import tqdm 
@@ -118,12 +119,12 @@ def train_agent(job_name, agent,
     best_eval_policy_index_sr = 0
     # Load from any existing checkpoint, policy, statistics, etc.
     # Why no checkpointing.. :(
-    i_start = _load_latest_policy_and_logs(agent,
-                                           policy_dir='iterations',
-                                           logs_dir='logs')
-    if i_start:
-        print("Resuming from an existing job folder ...")
-
+    # i_start = _load_latest_policy_and_logs(agent,
+    #                                        policy_dir='iterations',
+    #                                        logs_dir='logs')
+    # if i_start:
+    #     print("Resuming from an existing job folder ...")
+    i_start=0
     for i in tqdm(range(i_start, niter)):  # fresh start to 100 (100 iterations)
         print("......................................................................................")
         print("ITERATION : %i " % i)
@@ -172,7 +173,11 @@ def train_agent(job_name, agent,
                     pass
 
         # all the important training functions are included in batch_reinforce.py or dapg.py  (train_step function)
+        start_time = time.perf_counter()
         stats = agent.train_step(**args)  # this function is in batch_reinforce.py, with a train_from_paths function that can be rewritten
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time for RL training: {elapsed_time} seconds")
         # the stats are obtained before updating the policy (results on policy \pi_{t-1})
 
         train_curve[i] = stats[0] # mean sum rewards obtained during RL sampling using the policy before update

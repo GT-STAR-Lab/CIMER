@@ -10,7 +10,10 @@ import multiprocessing as mp
 import time as timer
 logging.disable(logging.CRITICAL)
 import torch
+import pandas as pd
+import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Single core rollout to sample trajectories
 # =======================================================
 def do_rollout(
@@ -60,6 +63,7 @@ def do_rollout(
         np.random.seed()
     paths = []
     num_future_s = len(future_state)
+    temp=[]
     for ep in range(num_traj):
         # seeding
         if base_seed is not None:
@@ -108,8 +112,7 @@ def do_rollout(
             t = 0
             obj_height = o[26]
             # while t < horizon - 1 and done != True:  # generate a single traj
-            # for the default history states, set them to be initial hand states
-            prev_states = dict()
+            # for the default history states, set them to be initial hand statesimport time
             for i in range(history_state):
                 if obj_dynamics:
                     prev_states[i] = np.append(hand_states_traj[0], object_states_traj[0]) 
@@ -223,6 +226,7 @@ def do_rollout(
                 t += 1
         elif task_id == 'relocate':
             o, desired_pos = env.reset()
+            temp_resnet_features=[]
             desired_pos_main=desired_pos
             init_hand_state = o[:30]
             init_objpos_world = o[39:42] # object position in the world frame
@@ -240,7 +244,14 @@ def do_rollout(
             # desired_pos = Test_data[k][0]['init']['target_pos']
             desired_pos = desired_pos_main[np.newaxis, ...]
             desired_pos = torch.from_numpy(desired_pos).float().to(device)
+            if ep==0:
+                start_time = time.perf_counter()
             implict_objpos = resnet_model(rgbd, desired_pos) 
+            if ep==0:
+                end_time = time.perf_counter()
+                elapsed_time = end_time - start_time
+                print(f"Elapsed time for calling resnet: {elapsed_time} seconds")
+
             obj_OriState = implict_objpos[0].cpu().detach().numpy()
             # obj_OriState = np.append(init_objpos_new, np.append(init_objorient, init_objvel))  # ori: represented in the transformed frame
             # obj_OriState_ = np.append(init_objpos_world, np.append(init_objorient, init_objvel)) # ori: represented in the original frame
@@ -251,6 +262,8 @@ def do_rollout(
             hand_states_traj[0, :] = hand_OriState
             object_states_traj[0, :] = obj_OriState
             z_t = Koopman_obser.z(hand_OriState, obj_OriState)  # initial states in lifted space
+            if ep==0:
+                start_time = time.perf_counter()
             for t_ in range(horizon - 1):
                 z_t_1_computed = np.dot(KODex, z_t)
                 z_t = z_t_1_computed.copy()
@@ -264,6 +277,10 @@ def do_rollout(
                 # obj_OriState = np.append(obj_pos_world, np.append(obj_ori, obj_vel))
                 hand_states_traj[t_ + 1, :] = hand_OriState
                 object_states_traj[t_ + 1, :] = obj_OriState
+            if ep==0:
+                end_time = time.perf_counter()
+                elapsed_time = end_time - start_time
+                print(f"Elapsed time for open loop rollout: {elapsed_time} seconds")
             done = False
             t = 0
             obj_height = o[41]
@@ -296,6 +313,8 @@ def do_rollout(
                         prev_actions[i] = hand_states_traj[0][6:30]
                     elif policy.m == 27:
                         prev_actions[i] = hand_states_traj[0][3:30]
+            if ep==0:
+                start_time = time.perf_counter()
             while t < horizon - 1  and obj_height > -0.05:  # what would be early-termination for relocation task?
                 if not policy.freeze_base:
                     current_hand_state = o[:30]
@@ -322,7 +341,10 @@ def do_rollout(
                 desired_pos = desired_pos_main[np.newaxis, ...]
                 desired_pos = torch.from_numpy(desired_pos).float().to(device)
                 implict_objpos = resnet_model(rgbd, desired_pos) 
+                
                 obj_OriState = implict_objpos[0].cpu().detach().numpy()
+                if ep<10:
+                    temp_resnet_features.append(obj_OriState)
                 if history_state >= 0: # we add the history information into policy inputs
                     if obj_dynamics:  # if we use the object dynamics as part of policy input
                         policy_input = np.zeros((num_future_s + history_state + 1) * (num_hand + num_obj) + (history_state + 1) * num_hand)
@@ -511,6 +533,15 @@ def do_rollout(
                 env_infos.append(env_info)  # include the indicator if the task is finished
                 o = next_o
                 t += 1
+            if ep==0:
+                end_time = time.perf_counter()
+                elapsed_time = end_time - start_time
+                print(f"Elapsed time for closed loop rollout: {elapsed_time} seconds")
+            if ep<10:
+                temp.append(temp_resnet_features)
+            if ep==10:
+                temp=np.array(temp)
+                np.save('rl_resnet_features.npy', np.array(temp))
         elif task_id == 'door':
             o, desired_pos = env.reset()
             init_hand_state = env.get_env_state()['qpos'][:28]
