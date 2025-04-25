@@ -1,5 +1,5 @@
 # Learning Prehensile Dexterity by Imitating and Emulating State-only Observations
-This is a repository containing the code for the IEEE RA-L paper "Learning Prehensile Dexterity by Imitating and Emulating State-only Observations".
+This is a repository containing the code for the IEEE ICRA 2025 / RA-L paper "Learning Prehensile Dexterity by Imitating and Emulating State-only Observations".
 
 Project webpage: [CIMER](https://sites.google.com/view/cimer-2024/)
 
